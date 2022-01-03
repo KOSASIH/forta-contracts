@@ -15,8 +15,9 @@ contract Router is IRouter, ForwardedContext, AccessManagedUpgradeable, UUPSUpgr
     using EnumerableSet for EnumerableSet.AddressSet;
 
     mapping(bytes4 => EnumerableSet.AddressSet) private _routingTable;
+    mapping(bytes4 => bool) private _revertsOnFail;
 
-    event RoutingUpdated(bytes4 indexed sig, address indexed target, bool enable);
+    event RoutingUpdated(bytes4 indexed sig, address indexed target, bool enable, bool revertsOnFail);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(address forwarder) initializer ForwardedContext(forwarder) {}
@@ -30,20 +31,24 @@ contract Router is IRouter, ForwardedContext, AccessManagedUpgradeable, UUPSUpgr
         bytes4 sig = bytes4(payload[:4]);
         uint256 length = _routingTable[sig].length();
         for (uint256 i = 0; i < length; ++i) {
-            // Lazy, don't worry about calls failing here
             (bool success, bytes memory returndata) = _routingTable[sig].at(i).call(payload);
+            if (_revertsOnFail[sig]) {
+                require(success, "Router: hook failed");
+            }
             success;
             returndata;
         }
     }
 
-    function setRoutingTable(bytes4 sig, address target, bool enable) external onlyRole(ROUTER_ADMIN_ROLE) {
+    function setRoutingTable(bytes4 sig, address target, bool enable, bool revertsOnFail) external onlyRole(ROUTER_ADMIN_ROLE) {
         if (enable) {
             _routingTable[sig].add(target);
+            _revertsOnFail[sig] = revertsOnFail;
         } else {
             _routingTable[sig].remove(target);
+            _revertsOnFail[sig] = false;
         }
-        emit RoutingUpdated(sig, target, enable);
+        emit RoutingUpdated(sig, target, enable, revertsOnFail);
     }
 
 
