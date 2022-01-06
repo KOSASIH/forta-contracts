@@ -218,7 +218,7 @@ contract FortaStaking is BaseComponent, ERC1155SupplyUpgradeable, IMinimumStakeC
         _activeStake.mint(activeSharesId, stakeValue);
         _mint(staker, activeSharesId, sharesValue, new bytes(0));
         emit StakeDeposited(subjectType, subject, staker, stakeValue);
-        _emitHook(abi.encodeWithSignature("hook_afterStakeChanged(uint8, uint256)", subjectType, subject));
+        _emitHook(abi.encodeWithSignature("hook_afterStakeChanged(uint8,uint256)", subjectType, subject));
         return sharesValue;
     }
 
@@ -250,7 +250,7 @@ contract FortaStaking is BaseComponent, ERC1155SupplyUpgradeable, IMinimumStakeC
 
         emit WithdrawalInitiated(subjectType, subject, staker, deadline);
 
-        _emitHook(abi.encodeWithSignature("hook_afterStakeChanged(uint8, uint256)", subjectType, subject));
+        _emitHook(abi.encodeWithSignature("hook_afterStakeChanged(uint8,uint256)", subjectType, subject));
         return deadline;
     }
 
@@ -281,7 +281,7 @@ contract FortaStaking is BaseComponent, ERC1155SupplyUpgradeable, IMinimumStakeC
         _burn(staker, inactiveSharesId, inactiveShares);
         SafeERC20.safeTransfer(stakedToken, staker, stakeValue);
 
-        _emitHook(abi.encodeWithSignature("hook_afterStakeChanged(uint8, uint256)", subjectType, subject));
+        _emitHook(abi.encodeWithSignature("hook_afterStakeChanged(uint8,uint256)", subjectType, subject));
 
         return stakeValue;
     }
@@ -315,7 +315,7 @@ contract FortaStaking is BaseComponent, ERC1155SupplyUpgradeable, IMinimumStakeC
 
         emit Slashed(subjectType, subject, _msgSender(), stakeValue);
 
-        _emitHook(abi.encodeWithSignature("hook_afterStakeChanged(uint8, uint256)", subjectType, subject));
+        _emitHook(abi.encodeWithSignature("hook_afterStakeChanged(uint8,uint256)", subjectType, subject));
 
         return stakeValue;
     }

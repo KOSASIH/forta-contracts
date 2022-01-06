@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/utils/structs/BitMaps.sol";
 
 import "./ScannerRegistryManaged.sol";
 import "../utils/MinStakeAware.sol";
+import "hardhat/console.sol";
 
 abstract contract ScannerRegistryEnable is ScannerRegistryManaged, MinStakeAwareUpgradeable {
     using BitMaps for BitMaps.BitMap;
@@ -14,6 +15,7 @@ abstract contract ScannerRegistryEnable is ScannerRegistryManaged, MinStakeAware
         SELF,
         OWNER,
         MANAGER,
+        STAKE,
         length
     }
 
@@ -38,6 +40,11 @@ abstract contract ScannerRegistryEnable is ScannerRegistryManaged, MinStakeAware
     function disableScanner(uint256 scannerId, Permission permission) public virtual {
         require(_hasPermission(scannerId, permission), "invalid permission");
         _enable(scannerId, permission, false);
+    }
+
+    function disableScannerUnderstaked(uint256 scannerId) public {
+        require(!_isStakedOverMinimum(SCANNER_SUBJECT, scannerId), "ScannerEnabled: scanner is not understaked");
+        _enable(scannerId, Permission.STAKE, false);
     }
 
     function _hasPermission(uint256 scannerId, Permission permission) internal view returns (bool) {
@@ -71,6 +78,22 @@ abstract contract ScannerRegistryEnable is ScannerRegistryManaged, MinStakeAware
 
     function _afterScannerEnable(uint256 scannerId, Permission permission, bool value) internal virtual {
         _emitHook(abi.encodeWithSignature("hook_afterScannerEnable(uint256)", scannerId));
+    }
+    /**
+     * Hook: stake is changed
+     */
+
+    /**
+     * hook to react to stake changes. If stake is under minimum, disable agent.
+     * Needs to be hooked to the routing table in Router.sol
+     * @param subjectType type of staked subject, described in FortaStakingSubjectTypes.sol
+     * @param subjectId id of the subject
+     */
+    function hook_afterStakeChanged(uint8 subjectType, uint256 subjectId) onlyRouter() external {
+        console.log("ScannerRegistry");
+        if (subjectType == SCANNER_SUBJECT) {
+            disableScannerUnderstaked(subjectId);
+        }
     }
 
     function _msgSender() internal view virtual override(ContextUpgradeable, ScannerRegistryCore) returns (address sender) {

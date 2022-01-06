@@ -7,6 +7,10 @@ import "../BaseComponent.sol";
 import "../agents/AgentRegistry.sol";
 import "../scanners/ScannerRegistry.sol";
 
+import "../staking/FortaStakingSubjectTypes.sol";
+
+import "hardhat/console.sol";
+
 contract Dispatch is BaseComponent {
     using EnumerableSet for EnumerableSet.UintSet;
 
@@ -126,6 +130,29 @@ contract Dispatch is BaseComponent {
             agents.length,
             keccak256(abi.encodePacked(agents, version, enabled))
         );
+    }
+
+    /**
+     * hook to react to stake changes. If stake is under minimum, disable agent.
+     * Needs to be hooked to the routing table in Router.sol
+     * @param subjectType type of staked subject, described in FortaStakingSubjectTypes.sol
+     * @param subjectId id of the subject
+     */
+    function hook_afterStakeChanged(uint8 subjectType, uint256 subjectId) onlyRouter() external {
+        console.log("Dispatch");
+        if (subjectType==SCANNER_SUBJECT) {
+            _unlinkAllFromScanner(subjectId);
+        } else if(subjectType==AGENT_SUBJECT) {
+            // TODO
+        }
+    }
+
+     function _unlinkAllFromScanner(uint256 scannerId) private {
+        console.log("unlink");
+        console.log(agentsFor(scannerId));
+        for(uint256 i=0; i<agentsFor(scannerId); i++) {
+            unlink(agentsAt(scannerId, i), scannerId);
+        }
     }
 
     uint256[46] private __gap;

@@ -9,6 +9,11 @@ abstract contract RoutedUpgradeable is AccessManagedUpgradeable {
 
     event RouterUpdated(address indexed router);
 
+    modifier onlyRouter() {
+        require(_msgSender()==address(_router), "RoutedUpgradeable: sender must be router");
+        _;
+    }
+
     function __Routed_init(address router) internal initializer {
         _router = IRouter(router);
         emit RouterUpdated(router);

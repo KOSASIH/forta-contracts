@@ -686,7 +686,7 @@ describe('Forta Staking', function () {
 
   describe('signals routing', async function () {
     beforeEach(async function () {
-      this.signature = ethers.utils.id("hook_afterStakeChanged(uint8, uint256)").slice(0,10);
+      this.signature = ethers.utils.id("hook_afterStakeChanged(uint8,uint256)").slice(0,10);
 
       this.accounts.getAccount('slasher');
       await expect(this.access.connect(this.accounts.admin).grantRole(this.roles.SLASHER, this.accounts.slasher.address)).to.be.not.reverted;
