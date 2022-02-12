@@ -9,7 +9,6 @@ import "../utils/AccessManaged.sol";
 import "../utils/ForwardedContext.sol";
 import "../../tools/ENSReverseRegistration.sol";
 import "./IRouter.sol";
-import "hardhat/console.sol";
 
 // This should be BaseComponent, because BaseComponent is Routed
 contract Router is IRouter, ForwardedContext, AccessManagedUpgradeable, UUPSUpgradeable, Multicall {
@@ -31,10 +30,6 @@ contract Router is IRouter, ForwardedContext, AccessManagedUpgradeable, UUPSUpgr
     function hookHandler(bytes calldata payload) external override {
         bytes4 sig = bytes4(payload[:4]);
         uint256 length = _routingTable[sig].length();
-        /*console.log("sig");
-        console.logBytes4(sig);
-        console.log("len");
-        console.log(length);*/
         for (uint256 i = 0; i < length; ++i) {
             (bool success, bytes memory returndata) = _routingTable[sig].at(i).call(payload);
             if (_revertsOnFail[sig]) {
@@ -46,12 +41,6 @@ contract Router is IRouter, ForwardedContext, AccessManagedUpgradeable, UUPSUpgr
     }
 
     function setRoutingTable(bytes4 sig, address target, bool enable, bool revertsOnFail) external onlyRole(ROUTER_ADMIN_ROLE) {
-        console.log("setRoutingTable");
-        console.log("sig");
-        console.logBytes4(sig);
-        console.log(target);
-        console.log("enable", enable, "revertsOnFail", revertsOnFail);
-        console.log("----");
         if (enable) {
             _routingTable[sig].add(target);
             _revertsOnFail[sig] = revertsOnFail;
